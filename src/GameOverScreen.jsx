@@ -40,11 +40,12 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
   const fs = (min, vhFrac, max) => `clamp(${min}px, ${containerH * vhFrac}px, ${max}px)`
 
   const anyNew = Object.values(isNew).some(Boolean)
+  const isMobile = containerH < 400
 
   return (
     <div
       className={`gameover-screen ${cleared ? 'cleared' : 'failed'}`}
-      style={{ width: containerW, height: containerH }}
+      style={{ width: containerW, height: containerH, overflowY: isMobile ? 'auto' : 'hidden' }}
     >
       <div style={{
         position: 'absolute', inset: 0,
@@ -57,9 +58,9 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
       <div className="gameover-content" style={{
         flexDirection: 'row', flexWrap: 'nowrap',
         alignItems: 'center', justifyContent: 'center',
-        gap: containerW * 0.04,
+        gap: isMobile ? 10 : containerW * 0.04,
         maxWidth: containerW,
-        padding: `0 ${containerW * 0.04}px`,
+        padding: isMobile ? '0 8px' : `0 ${containerW * 0.04}px`,
       }}>
 
         {/* 왼쪽: 캐릭터 (뿡치 + 홀리 나란히) */}
@@ -92,8 +93,8 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
             <span className="result-icon" style={{ fontSize: fs(22, 0.06, 48) }}>{cleared ? '🍗' : '💀'}</span>
           </div>
 
-          {/* 클리어 전용 부제목 */}
-          {cleared && (
+          {/* 클리어 전용 부제목 — 모바일에서 숨겨 공간 확보 */}
+          {cleared && !isMobile && (
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
               <p style={{ fontSize: fs(13, 0.030, 17), color: '#ffe082', fontWeight: 800, wordBreak: 'keep-all', whiteSpace: 'normal' }}>
                 뿡치의 뱃살이 한 단계 진화했다!
@@ -140,38 +141,58 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
             </div>
           </div>
 
-          {/* 최고기록 카드 */}
+          {/* 최고기록 — 모바일: 1줄 인라인 / 데스크톱: 카드 */}
           {best.score > 0 && (
-            <div style={{
-              marginTop: 8,
-              background: 'rgba(255,217,61,0.07)',
-              border: '1px solid rgba(255,217,61,0.28)',
-              borderRadius: 10, padding: '7px 12px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <span style={{ fontSize: fs(12, 0.028, 18) }}>🏆</span>
-                <span style={{ fontSize: fs(11, 0.026, 16), fontWeight: 800, color: '#FFD93D' }}>역대 최고기록</span>
-                {anyNew && (
-                  <span style={{
-                    background: '#FFD93D', color: '#3D2817',
-                    fontSize: fs(9, 0.020, 12), fontWeight: 900,
-                    borderRadius: 4, padding: '1px 6px', marginLeft: 'auto',
-                  }}>신기록!</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            isMobile ? (
+              <div style={{
+                marginTop: 5, display: 'flex', alignItems: 'center',
+                gap: 6, flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: fs(10, 0.022, 13), color: '#FFD93D', fontWeight: 800 }}>🏆</span>
                 {[
                   { icon: '⭐', v: best.score.toLocaleString() },
                   { icon: '🍗', v: `${best.chickenEaten}개` },
                   { icon: '💨', v: `${best.fartCount}회` },
                   { icon: '🏋️', v: `${Math.round(best.bellySize)}%` },
                 ].map(({ icon, v }) => (
-                  <span key={icon} style={{ fontSize: fs(11, 0.025, 15), color: '#ccc', fontWeight: 700 }}>
-                    {icon} {v}
-                  </span>
+                  <span key={icon} style={{ fontSize: fs(10, 0.022, 13), color: '#ccc', fontWeight: 700 }}>{icon} {v}</span>
                 ))}
+                {anyNew && (
+                  <span style={{ background: '#FFD93D', color: '#3D2817', fontSize: 9, borderRadius: 4, padding: '1px 4px', fontWeight: 900 }}>신기록!</span>
+                )}
               </div>
-            </div>
+            ) : (
+              <div style={{
+                marginTop: 8,
+                background: 'rgba(255,217,61,0.07)',
+                border: '1px solid rgba(255,217,61,0.28)',
+                borderRadius: 10, padding: '7px 12px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: fs(12, 0.028, 18) }}>🏆</span>
+                  <span style={{ fontSize: fs(11, 0.026, 16), fontWeight: 800, color: '#FFD93D' }}>역대 최고기록</span>
+                  {anyNew && (
+                    <span style={{
+                      background: '#FFD93D', color: '#3D2817',
+                      fontSize: fs(9, 0.020, 12), fontWeight: 900,
+                      borderRadius: 4, padding: '1px 6px', marginLeft: 'auto',
+                    }}>신기록!</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {[
+                    { icon: '⭐', v: best.score.toLocaleString() },
+                    { icon: '🍗', v: `${best.chickenEaten}개` },
+                    { icon: '💨', v: `${best.fartCount}회` },
+                    { icon: '🏋️', v: `${Math.round(best.bellySize)}%` },
+                  ].map(({ icon, v }) => (
+                    <span key={icon} style={{ fontSize: fs(11, 0.025, 15), color: '#ccc', fontWeight: 700 }}>
+                      {icon} {v}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           <div className="gameover-buttons" style={{ marginTop: 12, gap: 10 }}>

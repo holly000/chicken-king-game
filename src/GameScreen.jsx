@@ -88,7 +88,7 @@ function reducer(state, action) {
     case 'SPAWN_ITEM': {
       const timeProgress = Math.min(1, (STAGE_TIME - state.timeLeft) / STAGE_TIME)
       let pool = getItemPool(timeProgress)
-      if (state.player.debuff === 'toilet') pool = [...pool, 'radish', 'radish', 'radish', 'radish']
+      if (state.player.debuff === 'toilet') pool = ['radish','radish','radish','radish','radish','radish','chicken','cola_zero']
       let type = pool[Math.floor(Math.random() * pool.length)]
       if (type === 'ginger' && (state.lastSpawnType === 'ginger' || (state.gingerCooldown || 0) > 0)) {
         const ng = pool.filter(t => t !== 'ginger')
@@ -191,6 +191,7 @@ function tick(s) {
       const px = p.direction === 'right' ? p.x - s.playerW * 0.3 : p.x + s.playerW * 0.8
       fartParticles = [...fartParticles, ...makeFartParticles(px, p.y + s.playerH * 0.8, s.playerW, p.direction)]
       sfx = { ...sfx, fartJump: sfx.fartJump + 1 }
+      scorePopups = [...scorePopups, { id: `fp-${gameTick}`, x: p.x + s.playerW * 0.2, y: p.y, text: '방구 파워! 💨', life: 52, big: false }]
     } else if (!p.onGround && !p.airJumpConsumed && p.airJumpsLeft > 0 && fartGauge >= FART_COST) {
       p.vy = Math.min(p.vy, -11); p.isFlying = true; p.flyTick = 25
       p.airJumpsLeft--; p.airJumpConsumed = true; p.thrustTick = 20
@@ -460,6 +461,16 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
     prevSfxRef.current = curr
   }, [state.sfx])
 
+  // 변기 디버프 진입 시 즉각 스폰 (치킨무 확률 높은 풀)
+  useEffect(() => {
+    if (state.player.debuff === 'toilet') {
+      const t = setTimeout(() => {
+        if (!pausedRef.current) dispatch({ type: 'SPAWN_ITEM' })
+      }, 400)
+      return () => clearTimeout(t)
+    }
+  }, [state.player.debuff])
+
   // 게임 종료 감지
   useEffect(() => {
     if (endedRef.current || paused) return
@@ -487,9 +498,11 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
   const ss = String(timeLeft % 60).padStart(2, '0')
 
-  const ppSize     = Math.round(WORLD_H * 0.22)
-  const hollySize  = Math.round(ppSize * 0.70)
+  const isMobileSm  = WORLD_H < 280
+  const ppSize      = Math.round(WORLD_H * (isMobileSm ? 0.30 : 0.22))
+  const hollySize   = Math.round(ppSize * 0.70)
   const itemCardSize = Math.round(WORLD_H * 0.095)
+  const itemScale   = isMobileSm ? 1.72 : 1.45
 
   const charState = p.debuff === 'toilet' ? 'toilet'
                   : p.debuff === 'slow'   ? 'slow'
@@ -626,7 +639,7 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
               zIndex: 15, pointerEvents: 'none',
             }}>
               <div style={{
-                transform: 'scale(1.45)',
+                transform: `scale(${itemScale})`,
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 filter: shadow,
                 animation: isGinger ? 'ginger-item-pulse 0.55s ease-in-out infinite' : undefined,
@@ -720,7 +733,7 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
             left: p.x - (charPixelW - state.playerW) / 2,
             top:  p.y - (charPixelH - state.playerH) * 0.82,
             zIndex: 20, pointerEvents: 'none',
-            transform: p.isDucking ? 'scaleY(0.52) scaleX(1.3)' : undefined,
+            transform: p.isDucking ? 'scaleY(0.52) scaleX(1.3)' : p.isFlying ? 'scale(1.18)' : undefined,
             transformOrigin: 'bottom center',
           }}>
             <PpungchiChar size={ppSize} bellySize={p.bellySize} state={charState} direction={p.direction} invincible={p.invincible > 0} bellyJiggle={bellyJiggle} jiggleKey={jiggleKey} />
