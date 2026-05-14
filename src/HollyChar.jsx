@@ -7,28 +7,44 @@ const HOLLY_IMGS = {
   fallback:  '/assets/holly.png',
 }
 
-export default function HollyChar({ size = 60, dialog = null, bubbleDir = 'right', hollyState = 'idle', flying = false }) {
+export default function HollyChar({
+  size = 60,
+  dialog = null,
+  bubbleDir = 'right',
+  bubbleBelow = false,
+  hollyState = 'idle',
+  flying = false,
+}) {
   const imgSrc = HOLLY_IMGS[hollyState] || HOLLY_IMGS.idle
 
+  // bubbleBelow=true → 발 아래 말풍선 (뿡치 추종 시 아이템 안 가림)
+  // bubbleBelow=false → 머리 위 말풍선 (기본: StartScreen 등)
+  const bubbleStyle = bubbleBelow
+    ? {
+        position: 'absolute',
+        top: '100%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        marginTop: 5,
+        zIndex: 80,
+        minWidth: 90,
+        maxWidth: 190,
+      }
+    : {
+        position: 'absolute',
+        bottom: '108%',
+        [bubbleDir === 'right' ? 'left' : 'right']: '4%',
+        zIndex: 80,
+        minWidth: 160,
+        maxWidth: 300,
+      }
+
   return (
-    <div style={{
-      position: 'relative',
-      display: 'inline-block',
-      width: size,
-    }}>
-      {/* 날개 (비행 중) */}
-      {/* 말풍선 */}
+    <div style={{ position: 'relative', display: 'inline-block', width: size }}>
       {dialog && (
         <div
-          className="holly-bubble"
-          style={{
-            position: 'absolute',
-            bottom: '108%',
-            [bubbleDir === 'right' ? 'left' : 'right']: '4%',
-            zIndex: 80,
-            minWidth: 160,
-            maxWidth: 300,
-          }}
+          className={`holly-bubble${bubbleBelow ? ' below' : ''}`}
+          style={bubbleStyle}
         >
           <p>{dialog}</p>
         </div>

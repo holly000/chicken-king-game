@@ -690,21 +690,28 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
 
         {/* 아이템 토스트 안내 */}
         {itemToast && (
-          <div style={{
-            position: 'absolute', top: 10, left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(10,10,30,0.88)',
-            color: '#fff', fontWeight: 800,
-            fontSize: Math.max(13, WORLD_H * 0.036),
-            padding: '5px 18px', borderRadius: 20,
-            border: '1.5px solid rgba(255,255,255,0.22)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
-            zIndex: 85, pointerEvents: 'none', whiteSpace: 'nowrap',
-            animation: 'bubble-pop 0.2s ease-out',
-          }}>
+          <div
+            className="item-toast"
+            style={{
+              position: 'absolute', top: 10, left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(10,10,30,0.88)',
+              color: '#fff', fontWeight: 800,
+              fontSize: Math.max(12, WORLD_H * 0.036),
+              padding: '4px 14px', borderRadius: 20,
+              border: '1.5px solid rgba(255,255,255,0.22)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
+              zIndex: 85, pointerEvents: 'none', whiteSpace: 'nowrap',
+              animation: 'bubble-pop 0.2s ease-out',
+            }}
+          >
             {itemToast}
           </div>
         )}
+
+        {/* TODO [2탄]: 스테이지 클리어 시 "파랑치킨 해금" 연출 추가 예정
+            - onClear 콜백에서 획득 치킨 종류 전달
+            - 다음 판부터 해금된 파랑치킨이 아이템 풀에 추가되는 시스템 */}
 
         {/* 뿡치 (변기 상태 제외) */}
         {charState !== 'toilet' && (
@@ -740,15 +747,15 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
           </div>
         )}
 
-        {/* 홀리 — 좌하단 고정 (뿡치/아이템 시야를 가리지 않도록) */}
+        {/* 홀리 — 뿡치 추종, 뿡치 위에 위치, 말풍선은 발 아래로 */}
         {charState !== 'toilet' && (
           <div style={{
             position: 'absolute',
-            left: 8,
-            bottom: GROUND_H + 2,
+            left: Math.max(0, p.x - hollySize * 0.6),
+            top:  Math.max(4, p.y - hollySize * 0.5),
             zIndex: 22, pointerEvents: 'none',
           }}>
-            <HollyChar size={hollySize} dialog={dialog} bubbleDir="right" hollyState={hollyState} flying={false} />
+            <HollyChar size={hollySize} dialog={dialog} bubbleDir="right" bubbleBelow hollyState={hollyState} flying={false} />
           </div>
         )}
 

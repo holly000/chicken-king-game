@@ -978,6 +978,11 @@ html { height: 100dvh; }
   white-space: normal;
 }
 
+/* 발 아래 말풍선 변형 — 꼬리 위쪽 */
+.holly-bubble.below {
+  border-radius: 2px 12px 12px 12px !important;
+}
+
 /* ════════════════════════════════════════
    ░░  지면  ░░
    ════════════════════════════════════════ */
@@ -1177,8 +1182,12 @@ html { height: 100dvh; }
   .ctrl-btn.fart-btn { min-width: 72px; font-size: 0.72rem; padding: 0 10px; }
 
   /* ── 홀리 말풍선 ── */
-  .holly-bubble   { padding: 5px 8px !important; max-width: 150px; }
-  .holly-bubble p { font-size: 0.78rem; }
+  .holly-bubble         { padding: 4px 8px !important; max-width: 140px; min-width: 80px !important; }
+  .holly-bubble p       { font-size: 0.70rem; }
+  .holly-bubble.below   { max-width: 130px !important; min-width: 70px !important; }
+
+  /* ── 아이템 토스트: 게임 월드 상단 10px → 더 compact ── */
+  .item-toast { font-size: 0.72rem !important; padding: 3px 10px !important; }
 
   /* ── 점수/콤보/팝업 텍스트 ── */
   .score-popup      { font-size: 0.92rem; }
@@ -1186,7 +1195,7 @@ html { height: 100dvh; }
   .combo-popup      { font-size: 1.0rem; }
   .combo-popup.fire { font-size: 1.25rem; }
   .fart-text        { font-size: 1.2rem; }
-  .time-warn        { font-size: 0.85rem; padding: 3px 14px; }
+  .time-warn        { font-size: 0.85rem; padding: 3px 14px; top: 36px !important; }
   .belly-up-flash   { font-size: 0.82rem; }
 
   /* ── 일시정지 메뉴 ── */
@@ -1334,7 +1343,7 @@ html { height: 100dvh; }
 /* 시간 경고 — 더 강렬하게 */
 .time-warn {
   position:absolute;
-  top: 10px; left:50%; transform:translateX(-50%);
+  top: 48px; left:50%; transform:translateX(-50%);
   background: linear-gradient(135deg, rgba(230,57,70,0.96), rgba(180,0,0,0.96));
   color:#fff; font-size:1.1rem; font-weight:900;
   padding:6px 22px; border-radius:24px;

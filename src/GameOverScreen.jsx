@@ -95,10 +95,10 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
           {/* 클리어 전용 부제목 */}
           {cleared && (
             <div style={{ marginBottom: 8, textAlign: 'center' }}>
-              <p style={{ fontSize: fs(12, 0.030, 17), color: '#ffe082', fontWeight: 800, wordBreak: 'keep-all' }}>
+              <p style={{ fontSize: fs(13, 0.030, 17), color: '#ffe082', fontWeight: 800, wordBreak: 'keep-all', whiteSpace: 'normal' }}>
                 뿡치의 뱃살이 한 단계 진화했다!
               </p>
-              <p style={{ fontSize: fs(11, 0.027, 15), color: '#ff8fab', fontWeight: 700, marginTop: 3 }}>
+              <p style={{ fontSize: fs(12, 0.027, 15), color: '#ff8fab', fontWeight: 700, marginTop: 3, wordBreak: 'keep-all', whiteSpace: 'normal' }}>
                 다음 목적지: 양념거리 🌶️
               </p>
             </div>

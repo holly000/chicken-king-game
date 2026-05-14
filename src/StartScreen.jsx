@@ -18,9 +18,11 @@ function shouldAutoShow() {
 }
 
 export default function StartScreen({ onStart, containerW, containerH }) {
-  const [showStory, setShowStory] = useState(shouldAutoShow)
-  const [showBest,  setShowBest]  = useState(false)
-  const [best,      setBest]      = useState(() => loadBest())
+  const [showStory,    setShowStory]    = useState(shouldAutoShow)
+  const [showBest,     setShowBest]     = useState(false)
+  const [best,         setBest]         = useState(() => loadBest())
+  // 소형 화면(모바일 가로)에서는 조작법 기본 접힘
+  const [showControls, setShowControls] = useState(() => containerH > 450)
 
   useEffect(() => { preloadSounds() }, [])
   useEffect(() => { setBest(loadBest()) }, [])
@@ -96,6 +98,8 @@ export default function StartScreen({ onStart, containerW, containerH }) {
           padding: `${containerH * 0.035}px ${containerW * 0.03}px`,
           width: '100%',
           boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+          overflowY: 'auto',
+          maxHeight: containerH * 0.95,
         }}>
           {/* SFX 토글 */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
@@ -181,39 +185,61 @@ export default function StartScreen({ onStart, containerW, containerH }) {
             </div>
           )}
 
-          {/* 조작법 */}
-          <div style={{
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 10, padding: '8px 12px', marginBottom: 8,
-          }}>
-            <p style={{
-              fontSize: fs(containerH * 0.028, 18),
-              fontWeight: 700, color: '#FFD93D', marginBottom: 6, fontFamily: 'inherit',
-            }}>🎮 조작법</p>
-            {[
-              ['← →', '이동'],
-              ['Space / ↑', '💨 방귀 점프'],
-              ['↓ / S', '🦆 몸 낮추기'],
-              ['🍗 치킨', '먹으면 점수 UP!'],
-              ['🫚 생강', '피해! 화장실 감금'],
-              ['🥤 제로콜라', '방귀 게이지 크게 충전'],
-              ['🧃 일반콜라', '방귀 게이지 조금 감소!'],
-              ['🧊 치킨무', '화장실 즉시 탈출!'],
-            ].map(([key, desc]) => (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
-                <span style={{
-                  background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.28)',
-                  borderRadius: 5, padding: '2px 8px',
-                  fontSize: fs(containerH * 0.025, 15),
-                  fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', fontFamily: 'inherit',
-                }}>{key}</span>
-                <span style={{
-                  fontSize: fs(containerH * 0.025, 15),
-                  fontWeight: 700, color: '#ddd', fontFamily: 'inherit',
-                }}>{desc}</span>
+          {/* 조작법 — 소형 화면 기본 접힘 */}
+          <div style={{ marginBottom: 8 }}>
+            <button
+              onClick={() => setShowControls(v => !v)}
+              onMouseEnter={() => playSound('buttonHover')}
+              style={{
+                width: '100%',
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: showControls ? '10px 10px 0 0' : 10,
+                padding: '5px 12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                fontSize: fs(containerH * 0.026, 16),
+                fontWeight: 700, color: '#FFD93D',
+                fontFamily: 'inherit', cursor: 'pointer',
+              }}
+            >
+              <span>🎮 조작법</span>
+              <span style={{ fontSize: fs(containerH * 0.022, 13), opacity: 0.7 }}>
+                {showControls ? '▲ 접기' : '▼ 보기'}
+              </span>
+            </button>
+            {showControls && (
+              <div style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderTop: 'none',
+                borderRadius: '0 0 10px 10px',
+                padding: '6px 12px',
+              }}>
+                {[
+                  ['← →', '이동'],
+                  ['Space / ↑', '💨 방귀 점프'],
+                  ['↓ / S', '🦆 몸 낮추기'],
+                  ['🍗 치킨', '먹으면 점수 UP!'],
+                  ['🫚 생강', '피해! 변기 감금'],
+                  ['🥤 제로콜라', '방귀 게이지 크게 충전'],
+                  ['🧃 일반콜라', '방귀 게이지 조금 감소!'],
+                  ['🧊 치킨무', '변기 즉시 탈출!'],
+                ].map(([key, desc]) => (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
+                    <span style={{
+                      background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.28)',
+                      borderRadius: 5, padding: '2px 6px',
+                      fontSize: fs(containerH * 0.024, 14),
+                      fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', fontFamily: 'inherit',
+                    }}>{key}</span>
+                    <span style={{
+                      fontSize: fs(containerH * 0.024, 14),
+                      fontWeight: 700, color: '#ddd', fontFamily: 'inherit',
+                    }}>{desc}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           {/* 시작 버튼 */}
