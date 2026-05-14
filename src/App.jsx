@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import StartScreen from './StartScreen.jsx'
 import GameScreen from './GameScreen.jsx'
 import GameOverScreen from './GameOverScreen.jsx'
+import { getActiveId, setActiveId } from './utils/profiles.js'
 
 function useGameSize() {
   function calc() {
@@ -26,7 +27,8 @@ function useGameSize() {
 export default function App() {
   const [screen,  setScreen]  = useState('start')
   const [result,  setResult]  = useState(null)
-  const [gameKey, setGameKey] = useState(0)   // 변경 시 GameScreen 강제 재마운트
+  const [gameKey, setGameKey] = useState(0)
+  const [activeProfileId, setActiveProfileId] = useState(() => getActiveId())
   const { w, h } = useGameSize()
 
   function handleStart()         { setGameKey(k => k + 1); setScreen('game') }
@@ -34,12 +36,18 @@ export default function App() {
   function handleClear(stats)    { setResult({ ...stats, cleared: true  }); setScreen('gameover') }
   function handleRestart()       { setGameKey(k => k + 1); setScreen('game') }
   function handleMenu()          { setScreen('start') }
+  function handleProfileChange(id) { setActiveId(id); setActiveProfileId(id) }
 
   return (
     <div className="app-wrapper">
       <div className="game-container" style={{ width: w, height: h }}>
         {screen === 'start' && (
-          <StartScreen onStart={handleStart} containerW={w} containerH={h} />
+          <StartScreen
+            onStart={handleStart}
+            containerW={w} containerH={h}
+            activeProfileId={activeProfileId}
+            onProfileChange={handleProfileChange}
+          />
         )}
         {screen === 'game' && (
           <GameScreen
@@ -53,7 +61,13 @@ export default function App() {
           />
         )}
         {screen === 'gameover' && (
-          <GameOverScreen result={result} onRestart={handleRestart} onMenu={handleMenu} containerW={w} containerH={h} />
+          <GameOverScreen
+            result={result}
+            onRestart={handleRestart}
+            onMenu={handleMenu}
+            containerW={w} containerH={h}
+            activeProfileId={activeProfileId}
+          />
         )}
       </div>
     </div>

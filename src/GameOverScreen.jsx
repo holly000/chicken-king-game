@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import HollyChar from './HollyChar.jsx'
 import PpungchiChar from './PpungchiChar.jsx'
 import { saveBest, loadBest } from './utils/highScore.js'
+import { updateProfileBest, loadProfiles } from './utils/profiles.js'
 
 const FAIL_MSGS = [
   '뿡치... 괜찮아? 다시 해보자!',
@@ -10,15 +11,31 @@ const FAIL_MSGS = [
   '치킨은 다시 먹을 수 있어!',
 ]
 
-export default function GameOverScreen({ result, onRestart, onMenu, containerW, containerH }) {
-  const [best, setBest] = useState(() => loadBest())
+export default function GameOverScreen({ result, onRestart, onMenu, containerW, containerH, activeProfileId }) {
+  const [best, setBest] = useState(() => {
+    if (activeProfileId) {
+      const pr = loadProfiles().find(p => p.id === activeProfileId)
+      return pr?.best || loadBest()
+    }
+    return loadBest()
+  })
   const [isNew, setIsNew] = useState({})
+  const profileName = activeProfileId
+    ? (loadProfiles().find(p => p.id === activeProfileId)?.name || null)
+    : null
 
   useEffect(() => {
     if (!result) return
-    const { best: newBest, isNew: newIsNew } = saveBest(result)
-    setBest(newBest)
-    setIsNew(newIsNew)
+    if (activeProfileId) {
+      const newIsNew = updateProfileBest(activeProfileId, result) || {}
+      const pr = loadProfiles().find(p => p.id === activeProfileId)
+      setBest(pr?.best || result)
+      setIsNew(newIsNew)
+    } else {
+      const { best: newBest, isNew: newIsNew } = saveBest(result)
+      setBest(newBest)
+      setIsNew(newIsNew)
+    }
   }, [])
 
   if (!result) return null
@@ -170,7 +187,9 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <span style={{ fontSize: fs(12, 0.028, 18) }}>🏆</span>
-                  <span style={{ fontSize: fs(11, 0.026, 16), fontWeight: 800, color: '#FFD93D' }}>역대 최고기록</span>
+                  <span style={{ fontSize: fs(11, 0.026, 16), fontWeight: 800, color: '#FFD93D' }}>
+                    역대 최고기록{profileName ? ` (${profileName})` : ''}
+                  </span>
                   {anyNew && (
                     <span style={{
                       background: '#FFD93D', color: '#3D2817',

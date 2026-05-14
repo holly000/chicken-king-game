@@ -1197,6 +1197,8 @@ html { height: 100dvh; }
   .fart-text        { font-size: 1.2rem; }
   .time-warn        { font-size: 0.65rem !important; padding: 2px 8px !important; top: 6px !important; right: 6px !important; }
   .score-popup.belly { font-size: 1.1rem !important; }
+  /* 방귀 파티클 더 크게 */
+  .fart-text { font-size: 1.4rem !important; }
   .belly-up-flash   { font-size: 0.82rem; }
 
   /* ── 일시정지 메뉴 ── */

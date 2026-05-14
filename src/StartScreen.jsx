@@ -4,6 +4,8 @@ import HollyChar from './HollyChar.jsx'
 import SfxToggle from './SfxToggle.jsx'
 import { playSound, preloadSounds, unlockAudio } from './utils/audio.js'
 import { loadBest } from './utils/highScore.js'
+import { loadProfiles, getActiveId } from './utils/profiles.js'
+import ProfileSelect from './ProfileSelect.jsx'
 
 function getTodayStr() {
   return new Date().toISOString().slice(0, 10) // YYYY-MM-DD
@@ -17,12 +19,27 @@ function shouldAutoShow() {
   }
 }
 
-export default function StartScreen({ onStart, containerW, containerH }) {
+export default function StartScreen({ onStart, containerW, containerH, activeProfileId, onProfileChange }) {
   const [showStory,    setShowStory]    = useState(shouldAutoShow)
   const [showBest,     setShowBest]     = useState(false)
+  const [showProfile,  setShowProfile]  = useState(false)
   const [best,         setBest]         = useState(() => loadBest())
+  const [profileName,  setProfileName]  = useState(() => {
+    const id = activeProfileId || getActiveId()
+    return id ? (loadProfiles().find(p => p.id === id)?.name || null) : null
+  })
   // 소형 화면(모바일 가로)에서는 조작법 기본 접힘
   const [showControls, setShowControls] = useState(() => containerH > 450)
+
+  useEffect(() => {
+    const id = activeProfileId
+    if (id) {
+      const p = loadProfiles().find(pr => pr.id === id)
+      setProfileName(p?.name || null)
+    } else {
+      setProfileName(null)
+    }
+  }, [activeProfileId])
 
   useEffect(() => { preloadSounds() }, [])
   useEffect(() => { setBest(loadBest()) }, [])
@@ -111,13 +128,18 @@ export default function StartScreen({ onStart, containerW, containerH }) {
             <span style={{ fontSize: Math.min(containerH * 0.08, 52) }}>🍗</span>
             <div>
               <h1 style={{
-                fontSize: fs(containerH * 0.054, 48),
+                fontSize: fs(containerH * 0.048, 44),
                 fontWeight: 900, color: '#FFD93D',
                 textShadow: '2px 2px 0 #7a4000, 0 0 20px rgba(255,217,61,0.5)',
-                lineHeight: 1.1, fontFamily: 'inherit',
-              }}>세상치킨다먹기</h1>
+                lineHeight: 1.1, fontFamily: 'inherit', wordBreak: 'keep-all',
+              }}>이 세상 치킨 다 먹기</h1>
               <p style={{
-                fontSize: fs(containerH * 0.025, 16),
+                fontSize: fs(containerH * 0.022, 14),
+                fontWeight: 700, color: '#ff8fab', marginTop: 3,
+                wordBreak: 'keep-all',
+              }}>외계인 뿡치와 홀리의 치킨정복기</p>
+              <p style={{
+                fontSize: fs(containerH * 0.021, 13),
                 fontWeight: 700, color: '#FFE082', marginTop: 2,
               }}>치킨을 먹고 방귀로 날아라!</p>
             </div>
@@ -223,7 +245,8 @@ export default function StartScreen({ onStart, containerW, containerH }) {
                   ['🫚 생강', '피해! 변기 감금'],
                   ['🥤 제로콜라', '방귀 게이지 크게 충전'],
                   ['🧃 일반콜라', '방귀 게이지 조금 감소!'],
-                  ['🧊 치킨무', '변기 즉시 탈출!'],
+                  ['🧊 치킨무', '변기 즉시 탈출! (3개 모으면 예비 저장)'],
+                  ['↓↓ 연타 / 🧊버튼', '예비 치킨무 사용 — 변기 탈출!'],
                 ].map(([key, desc]) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
                     <span style={{
@@ -240,6 +263,26 @@ export default function StartScreen({ onStart, containerW, containerH }) {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* 프로필 표시 + 변경 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: fs(containerH * 0.023, 14), color: profileName ? '#7ee8ff' : '#888', fontWeight: 700, flex: 1 }}>
+              {profileName ? `👤 ${profileName}` : '👤 게스트 (프로필 없음)'}
+            </span>
+            <button
+              onClick={click(() => setShowProfile(true))}
+              onMouseEnter={() => playSound('buttonHover')}
+              style={{
+                background: 'rgba(100,220,255,0.12)',
+                border: '1px solid rgba(100,220,255,0.4)',
+                borderRadius: 8, padding: '4px 10px',
+                fontSize: fs(containerH * 0.022, 13),
+                fontWeight: 800, color: '#7ee8ff',
+                fontFamily: 'inherit', cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >👤 프로필</button>
           </div>
 
           {/* 시작 버튼 */}
@@ -266,6 +309,21 @@ export default function StartScreen({ onStart, containerW, containerH }) {
           }}>📍 45초 안에 치킨 10개!</p>
         </div>
       </div>
+
+      {/* ── 프로필 모달 ── */}
+      {showProfile && (
+        <ProfileSelect
+          containerW={containerW}
+          containerH={containerH}
+          onClose={() => setShowProfile(false)}
+          onSelect={(id) => {
+            if (onProfileChange) onProfileChange(id)
+            const p = loadProfiles().find(pr => pr.id === id)
+            setProfileName(p?.name || null)
+            setShowProfile(false)
+          }}
+        />
+      )}
 
       {/* ── 스토리 모달 ── */}
       {showStory && (

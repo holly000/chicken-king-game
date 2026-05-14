@@ -75,6 +75,7 @@ function makeInit(W, H, groundH) {
     lastSpawnType: null,
     gingerCooldown: 0,
     itemToast: null, itemToastLife: 0, itemToastCd: {},
+    radishCount: 0, reserveRadish: 0, lastDownPress: 0,
     keys: { left: false, right: false, jump: false, down: false },
     sfx: { chickenEat: 0, fartJump: 0, gingerHit: 0, colaBad: 0, colaZero: 0, radish: 0 },
   }
@@ -83,12 +84,44 @@ function makeInit(W, H, groundH) {
 // ── 리듀서 ──────────────────────────────────────────────────────────────────────
 function reducer(state, action) {
   switch (action.type) {
-    case 'KEY_DOWN': return state.keys[action.key] ? state : { ...state, keys: { ...state.keys, [action.key]: true } }
+    case 'KEY_DOWN': {
+      const isNew = !state.keys[action.key]
+      const next = isNew ? { ...state, keys: { ...state.keys, [action.key]: true } } : state
+      if (action.key === 'down' && isNew) {
+        const dt = state.gameTick - (state.lastDownPress || 0)
+        if (dt < 30 && (state.reserveRadish || 0) > 0 && state.player.debuff === 'toilet') {
+          return { ...next, lastDownPress: 0, reserveRadish: state.reserveRadish - 1,
+                   player: { ...next.player, debuff: null, debuffTimer: 0 } }
+        }
+        return { ...next, lastDownPress: state.gameTick }
+      }
+      return next
+    }
     case 'KEY_UP':   return state.keys[action.key] === false ? state : { ...state, keys: { ...state.keys, [action.key]: false } }
+    case 'USE_RESERVE': {
+      if ((state.reserveRadish || 0) > 0 && state.player.debuff === 'toilet') {
+        return { ...state, reserveRadish: state.reserveRadish - 1,
+                 player: { ...state.player, debuff: null, debuffTimer: 0 } }
+      }
+      return state
+    }
+    case 'SPAWN_RESCUE_RADISH': {
+      const rp = state.player
+      const iw = Math.round(state.H * 0.14)
+      const targetY = Math.max(10, Math.min(state.groundY - iw - 5, rp.y))
+      const rescueItem = {
+        id: state.nextId, type: 'radish',
+        x: state.W + 20, y: targetY, baseY: targetY,
+        w: iw, h: iw,
+        waveAmp: 0, waveFreq: 0, waveOffset: 0,
+        speedMult: 4.2, rotSpeed: 10, rotation: 0, alive: true,
+      }
+      return { ...state, items: [...state.items, rescueItem], nextId: state.nextId + 1 }
+    }
     case 'SPAWN_ITEM': {
       const timeProgress = Math.min(1, (STAGE_TIME - state.timeLeft) / STAGE_TIME)
       let pool = getItemPool(timeProgress)
-      if (state.player.debuff === 'toilet') pool = ['radish','radish','radish','radish','radish','radish','chicken','cola_zero']
+      if (state.player.debuff === 'toilet') pool = [...pool, 'radish', 'radish']
       let type = pool[Math.floor(Math.random() * pool.length)]
       if (type === 'ginger' && (state.lastSpawnType === 'ginger' || (state.gingerCooldown || 0) > 0)) {
         const ng = pool.filter(t => t !== 'ginger')
@@ -150,6 +183,8 @@ function tick(s) {
   let lastIdleTick = s.lastIdleTick, lastBellyNotice = s.lastBellyNotice, lastTimeWarn = s.lastTimeWarn
   let gameTick = s.gameTick + 1
   let newDialog = null, highPriority = false
+  let radishCount   = s.radishCount   || 0
+  let reserveRadish = s.reserveRadish || 0
   let itemToast = s.itemToast, itemToastLife = Math.max(0, (s.itemToastLife || 0) - 1)
   if (itemToastLife === 0) itemToast = null
   const rawCd = s.itemToastCd || {}
@@ -315,6 +350,7 @@ function tick(s) {
     } else if (item.type === 'radish') {
       p.debuff = null; p.debuffTimer = 0
       fartGauge = Math.min(MAX_FART, fartGauge + 20)
+      radishCount++; if (radishCount >= 3) { reserveRadish++; radishCount = 0 }
       newDialog = pickLine(HOLLY_LINES.radish); highPriority = true
       sfx = { ...sfx, radish: sfx.radish + 1 }
     }
@@ -357,6 +393,7 @@ function tick(s) {
     dialog, dialogTimer, dialogCooldown,
     lastIdleTick, lastBellyNotice, lastTimeWarn, gameTick,
     itemToast, itemToastLife, itemToastCd,
+    radishCount, reserveRadish,
     gingerCooldown, sfx,
   }
 }
@@ -461,12 +498,12 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
     prevSfxRef.current = curr
   }, [state.sfx])
 
-  // 변기 디버프 진입 시 즉각 스폰 (치킨무 확률 높은 풀)
+  // 변기 디버프 진입 시 치킨무 미사일 스폰
   useEffect(() => {
     if (state.player.debuff === 'toilet') {
       const t = setTimeout(() => {
-        if (!pausedRef.current) dispatch({ type: 'SPAWN_ITEM' })
-      }, 400)
+        if (!pausedRef.current) dispatch({ type: 'SPAWN_RESCUE_RADISH' })
+      }, 300)
       return () => clearTimeout(t)
     }
   }, [state.player.debuff])
@@ -490,7 +527,7 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
     }
   }, [state.player.health, state.timeLeft, paused])
 
-  const { player: p, fartGauge, score, chickenEaten, fartCount, timeLeft, items, fartParticles, scorePopups, comboPopups, comboCount, shakeTimer, dialog, itemToast } = state
+  const { player: p, fartGauge, score, chickenEaten, fartCount, timeLeft, items, fartParticles, scorePopups, comboPopups, comboCount, shakeTimer, dialog, itemToast, reserveRadish } = state
 
   const fartPct  = Math.round(fartGauge)
   const bellyPct = Math.round(((p.bellySize - 100) / 300) * 100)
@@ -499,10 +536,10 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
   const ss = String(timeLeft % 60).padStart(2, '0')
 
   const isMobileSm  = WORLD_H < 280
-  const ppSize      = Math.round(WORLD_H * (isMobileSm ? 0.30 : 0.22))
+  const ppSize      = Math.round(WORLD_H * (isMobileSm ? 0.36 : 0.22))
   const hollySize   = Math.round(ppSize * 0.70)
   const itemCardSize = Math.round(WORLD_H * 0.095)
-  const itemScale   = isMobileSm ? 1.72 : 1.45
+  const itemScale   = isMobileSm ? 2.0 : 1.45
 
   const charState = p.debuff === 'toilet' ? 'toilet'
                   : p.debuff === 'slow'   ? 'slow'
@@ -733,7 +770,12 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
             left: p.x - (charPixelW - state.playerW) / 2,
             top:  p.y - (charPixelH - state.playerH) * 0.82,
             zIndex: 20, pointerEvents: 'none',
-            transform: p.isDucking ? 'scaleY(0.52) scaleX(1.3)' : p.isFlying ? 'scale(1.18)' : undefined,
+            transform: p.isDucking
+              ? 'scaleY(0.52) scaleX(1.3)'
+              : (p.fartTick || 0) > 12 ? 'scale(1.48)'
+              : (p.fartTick || 0) > 6  ? 'scale(1.32)'
+              : p.isFlying ? 'scale(1.18)'
+              : undefined,
             transformOrigin: 'bottom center',
           }}>
             <PpungchiChar size={ppSize} bellySize={p.bellySize} state={charState} direction={p.direction} invincible={p.invincible > 0} bellyJiggle={bellyJiggle} jiggleKey={jiggleKey} />
@@ -764,8 +806,8 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
         {charState !== 'toilet' && (
           <div style={{
             position: 'absolute',
-            left: Math.max(0, p.x - hollySize * 0.6),
-            top:  Math.max(4, p.y - hollySize * 0.5),
+            left: Math.min(state.W - hollySize, Math.max(0, p.x + charPixelW * 0.5)),
+            top:  Math.max(4, p.y + charPixelH * 0.32),
             zIndex: 22, pointerEvents: 'none',
           }}>
             <HollyChar size={hollySize} dialog={dialog} bubbleDir="right" bubbleBelow hollyState={hollyState} flying={false} />
@@ -813,6 +855,11 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
           <span className="hud-gauge-pct">{Math.round(p.bellySize)}%</span>
         </div>
         <div className="hud-fart-count">💨×{fartCount}</div>
+        {(reserveRadish || 0) > 0 && (
+          <div style={{ fontSize: '0.65rem', color: '#7ee8ff', fontWeight: 900, display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+            🧊×{reserveRadish}
+          </div>
+        )}
       </div>
 
       {/* ── 컨트롤 바 ── */}
@@ -828,6 +875,18 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
         <button className={`ctrl-btn fart-btn ${fartGauge < FART_COST ? 'empty' : ''}`} onPointerDown={pressJ} onPointerUp={relJ} onPointerLeave={relJ} style={{ fontSize: Math.max(16, CTRL_H * 0.44), padding: '0 16px' }}>
           💨 방귀!
         </button>
+        {(reserveRadish || 0) > 0 && (
+          <button
+            className="ctrl-btn"
+            onPointerDown={() => dispatch({ type: 'USE_RESERVE' })}
+            style={{
+              fontSize: Math.max(14, CTRL_H * 0.38), minWidth: 44,
+              background: 'rgba(0,180,255,0.18)',
+              border: '1px solid rgba(100,220,255,0.5)',
+            }}
+            title="예비 치킨무 사용 (변기 즉시 탈출)"
+          >🧊</button>
+        )}
       </div>
 
       {/* ── 일시정지 오버레이 ── */}
