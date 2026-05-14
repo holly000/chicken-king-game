@@ -706,45 +706,67 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
           </div>
         )}
 
-        {/* 뿡치 */}
-        <div style={{
-          position: 'absolute',
-          left: p.x - (charPixelW - state.playerW) / 2,
-          top:  p.y - (charPixelH - state.playerH) * 0.82,
-          zIndex: 20, pointerEvents: 'none',
-          transform: p.isDucking ? 'scaleY(0.52) scaleX(1.3)' : undefined,
-          transformOrigin: 'bottom center',
-        }}>
-          <PpungchiChar size={ppSize} bellySize={p.bellySize} state={charState} direction={p.direction} invincible={p.invincible > 0} bellyJiggle={bellyJiggle} jiggleKey={jiggleKey} />
-        </div>
-
-        {/* 홀리 — 뿡치 좌표 직접 추종 (no transition, no bottom) */}
+        {/* 뿡치 (변기 상태 제외) */}
         {charState !== 'toilet' && (
           <div style={{
             position: 'absolute',
-            left: Math.max(0, p.x - hollySize * 0.75),
-            top: p.y + state.playerH * 0.15,
+            left: p.x - (charPixelW - state.playerW) / 2,
+            top:  p.y - (charPixelH - state.playerH) * 0.82,
+            zIndex: 20, pointerEvents: 'none',
+            transform: p.isDucking ? 'scaleY(0.52) scaleX(1.3)' : undefined,
+            transformOrigin: 'bottom center',
+          }}>
+            <PpungchiChar size={ppSize} bellySize={p.bellySize} state={charState} direction={p.direction} invincible={p.invincible > 0} bellyJiggle={bellyJiggle} jiggleKey={jiggleKey} />
+          </div>
+        )}
+
+        {/* 변기 갇힘 — 크게 중앙 표시 */}
+        {charState === 'toilet' && (
+          <div style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            transform: 'translate(-50%, -55%)',
+            zIndex: 28, pointerEvents: 'none',
+          }}>
+            <img
+              src="/assets/boongchi_toilet.png"
+              alt="변기에 갇힌 뿡치"
+              style={{
+                height: Math.round(WORLD_H * 0.52),
+                width: 'auto', display: 'block',
+                filter: 'drop-shadow(0 6px 24px rgba(80,0,0,0.7))',
+              }}
+            />
+          </div>
+        )}
+
+        {/* 홀리 — 좌하단 고정 (뿡치/아이템 시야를 가리지 않도록) */}
+        {charState !== 'toilet' && (
+          <div style={{
+            position: 'absolute',
+            left: 8,
+            bottom: GROUND_H + 2,
             zIndex: 22, pointerEvents: 'none',
           }}>
             <HollyChar size={hollySize} dialog={dialog} bubbleDir="right" hollyState={hollyState} flying={false} />
           </div>
         )}
 
-        {/* 화장실 갇힘 오버레이 */}
+        {/* 변기 갇힘 텍스트 오버레이 */}
         {charState === 'toilet' && (
           <div style={{
-            position: 'absolute', top: '16%', left: '50%',
+            position: 'absolute', top: '8%', left: '50%',
             transform: 'translateX(-50%)',
             background: 'rgba(130,20,20,0.88)',
-            borderRadius: 16, padding: '8px 24px',
-            fontSize: Math.max(18, WORLD_H * 0.065),
+            borderRadius: 16, padding: '6px 20px',
+            fontSize: Math.max(16, WORLD_H * 0.055),
             fontWeight: 900, color: '#fff',
             textShadow: '2px 2px 0 #4a0000',
             whiteSpace: 'nowrap', zIndex: 50,
             pointerEvents: 'none',
             animation: 'ginger-danger-pulse 0.5s ease-in-out infinite',
           }}>
-            🚽 화장실에 갇혔다!!
+            🚽 변기뿌시는 중!!
           </div>
         )}
 
@@ -757,14 +779,14 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
       {/* ── HUD 하단 ── */}
       <div className="hud-bar bottom" style={{ position: 'absolute', top: HUD_TOP + WORLD_H, width: containerW, height: HUD_BOT }}>
         <div className="hud-gauge-row">
-          <span className="hud-gauge-label">💨</span>
+          <span className="hud-gauge-label">💨 방귀</span>
           <div className="hud-gauge-bar" style={{ flex: 1, maxWidth: 160 }}>
             <div className={`hud-gauge-fill fart ${fartPct < 20 ? 'low' : fartPct > 80 ? 'high' : ''}`} style={{ width: `${fartPct}%` }} />
           </div>
           <span className="hud-gauge-pct">{fartPct}%</span>
         </div>
         <div className="hud-gauge-row" style={{ marginLeft: 12 }}>
-          <span className="hud-gauge-label">🏋️</span>
+          <span className="hud-gauge-label">🏋️ 뱃살</span>
           <div className="hud-gauge-bar" style={{ flex: 1, maxWidth: 120 }}>
             <div className="hud-gauge-fill belly" style={{ width: `${Math.min(100, bellyPct)}%` }} />
           </div>
@@ -781,7 +803,7 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
           <button className={`ctrl-btn ${p.isDucking ? 'active' : ''}`} onPointerDown={pressD} onPointerUp={relD} onPointerLeave={relD} style={{ fontSize: Math.max(14, CTRL_H * 0.4), minWidth: 36 }} title="몸 낮추기 (↓)">▼</button>
         </div>
         <div style={{ fontSize: '0.72rem', color: '#888' }}>
-          {p.debuff === 'toilet' ? '🚽 화장실 중...' : p.debuff === 'slow' ? '😵 더부룩...' : p.isDucking ? '🦆 납작!' : ''}
+          {p.debuff === 'toilet' ? '🚽 변기뿌시는 중...' : p.debuff === 'slow' ? '😵 더부룩...' : p.isDucking ? '🦆 납작!' : ''}
         </div>
         <button className={`ctrl-btn fart-btn ${fartGauge < FART_COST ? 'empty' : ''}`} onPointerDown={pressJ} onPointerUp={relJ} onPointerLeave={relJ} style={{ fontSize: Math.max(16, CTRL_H * 0.44), padding: '0 16px' }}>
           💨 방귀!

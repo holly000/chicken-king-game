@@ -3,6 +3,7 @@ import ParallaxBg from './ParallaxBg.jsx'
 import HollyChar from './HollyChar.jsx'
 import SfxToggle from './SfxToggle.jsx'
 import { playSound, preloadSounds, unlockAudio } from './utils/audio.js'
+import { loadBest } from './utils/highScore.js'
 
 function getTodayStr() {
   return new Date().toISOString().slice(0, 10) // YYYY-MM-DD
@@ -18,8 +19,11 @@ function shouldAutoShow() {
 
 export default function StartScreen({ onStart, containerW, containerH }) {
   const [showStory, setShowStory] = useState(shouldAutoShow)
+  const [showBest,  setShowBest]  = useState(false)
+  const [best,      setBest]      = useState(() => loadBest())
 
   useEffect(() => { preloadSounds() }, [])
+  useEffect(() => { setBest(loadBest()) }, [])
 
   const click = (fn) => () => { unlockAudio(); playSound('buttonClick'); fn() }
 
@@ -32,7 +36,7 @@ export default function StartScreen({ onStart, containerW, containerH }) {
 
   const ppungchiW = Math.min(containerH * 0.78, containerW * 0.38)
   const hollyW    = ppungchiW * 0.38
-  const fs        = (base, max) => `clamp(${Math.round(base * 0.7)}px, ${Math.round(base)}px, ${max}px)`
+  const fs        = (base, max) => `clamp(${Math.max(13, Math.round(base * 0.7))}px, ${Math.round(base)}px, ${max}px)`
   const imgBoxH   = Math.min(130, containerH * 0.16)
 
   return (
@@ -115,20 +119,67 @@ export default function StartScreen({ onStart, containerW, containerH }) {
             </div>
           </div>
 
-          {/* 스토리 보기 버튼 */}
-          <button
-            onClick={click(() => setShowStory(true))}
-            onMouseEnter={() => playSound('buttonHover')}
-            style={{
-              background: 'rgba(255,217,61,0.13)',
-              border: '1px solid rgba(255,217,61,0.4)',
-              borderRadius: 8, padding: '4px 14px',
-              fontSize: fs(containerH * 0.026, 16),
-              fontWeight: 800, color: '#FFD93D',
-              fontFamily: 'inherit', cursor: 'pointer',
-              marginBottom: 8,
-            }}
-          >📖 스토리 보기</button>
+          {/* 스토리 + 최고기록 버튼 행 */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <button
+              onClick={click(() => setShowStory(true))}
+              onMouseEnter={() => playSound('buttonHover')}
+              style={{
+                flex: 1,
+                background: 'rgba(255,217,61,0.13)',
+                border: '1px solid rgba(255,217,61,0.4)',
+                borderRadius: 8, padding: '4px 10px',
+                fontSize: fs(containerH * 0.026, 16),
+                fontWeight: 800, color: '#FFD93D',
+                fontFamily: 'inherit', cursor: 'pointer',
+              }}
+            >📖 스토리</button>
+            <button
+              onClick={click(() => setShowBest(b => !b))}
+              onMouseEnter={() => playSound('buttonHover')}
+              style={{
+                flex: 1,
+                background: best.score > 0 ? 'rgba(255,217,61,0.18)' : 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,217,61,0.35)',
+                borderRadius: 8, padding: '4px 10px',
+                fontSize: fs(containerH * 0.026, 16),
+                fontWeight: 800, color: '#FFD93D',
+                fontFamily: 'inherit', cursor: 'pointer',
+              }}
+            >🏆 최고기록</button>
+          </div>
+
+          {/* 최고기록 패널 */}
+          {showBest && (
+            <div style={{
+              background: 'rgba(255,217,61,0.07)',
+              border: '1px solid rgba(255,217,61,0.28)',
+              borderRadius: 10, padding: '8px 12px', marginBottom: 8,
+            }}>
+              {best.score > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
+                  {[
+                    { icon: '⭐', label: '점수',  v: best.score.toLocaleString() },
+                    { icon: '🍗', label: '치킨',  v: `${best.chickenEaten}개` },
+                    { icon: '💨', label: '방귀',  v: `${best.fartCount}회` },
+                    { icon: '🏋️', label: '뱃살',  v: `${Math.round(best.bellySize)}%` },
+                  ].map(({ icon, label, v }) => (
+                    <span key={label} style={{
+                      fontSize: fs(containerH * 0.024, 14),
+                      fontWeight: 700, color: '#ffe082', fontFamily: 'inherit',
+                    }}>
+                      {icon} {label} {v}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p style={{
+                  fontSize: fs(containerH * 0.024, 14),
+                  fontWeight: 700, color: '#888', fontFamily: 'inherit',
+                }}>아직 기록이 없어요. 도전해보세요! 🍗</p>
+              )}
+            </div>
+          )}
 
           {/* 조작법 */}
           <div style={{
