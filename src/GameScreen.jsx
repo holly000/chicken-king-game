@@ -724,7 +724,7 @@ export default function GameScreen({ onGameOver, onClear, onRestart, onMenu, con
             position: 'absolute',
             left: Math.max(0, p.x - hollySize * 0.75),
             top: p.y + state.playerH * 0.15,
-            zIndex: 18, pointerEvents: 'none',
+            zIndex: 22, pointerEvents: 'none',
           }}>
             <HollyChar size={hollySize} dialog={dialog} bubbleDir="right" hollyState={hollyState} flying={false} />
           </div>

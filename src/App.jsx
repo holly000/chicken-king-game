@@ -5,10 +5,11 @@ import GameOverScreen from './GameOverScreen.jsx'
 
 function useGameSize() {
   function calc() {
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    const byWidth  = { w: vw,          h: vw * 9 / 16 }
-    const byHeight = { w: vh * 16 / 9, h: vh }
+    const vp = window.visualViewport
+    const vw = vp ? vp.width  : window.innerWidth
+    const vh = vp ? vp.height : window.innerHeight
+    const byWidth  = { w: Math.floor(vw),          h: Math.floor(vw * 9 / 16) }
+    const byHeight = { w: Math.floor(vh * 16 / 9), h: Math.floor(vh) }
     if (byWidth.h <= vh) return byWidth
     return byHeight
   }
@@ -16,7 +17,11 @@ function useGameSize() {
   useEffect(() => {
     const onResize = () => setSize(calc())
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    window.visualViewport?.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.visualViewport?.removeEventListener('resize', onResize)
+    }
   }, [])
   return size
 }

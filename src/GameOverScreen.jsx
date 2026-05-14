@@ -71,7 +71,7 @@ export default function GameOverScreen({ result, onRestart, onMenu, containerW, 
 
           <div className="result-title" style={{ marginBottom: 10 }}>
             <span className="result-icon" style={{ fontSize: fs(22, 0.06, 48) }}>{cleared ? '🎉' : '💀'}</span>
-            <h1 style={{ fontSize: fs(22, 0.065, 52), fontWeight: 900 }}>
+            <h1 style={{ fontSize: fs(22, 0.065, 52), fontWeight: 900, whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>
               {cleared ? '스테이지 클리어!' : '게임 오버'}
             </h1>
             <span className="result-icon" style={{ fontSize: fs(22, 0.06, 48) }}>{cleared ? '🍗' : '💀'}</span>

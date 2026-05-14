@@ -60,7 +60,7 @@ export default function StartScreen({ onStart, containerW, containerH }) {
           marginBottom: -hollyW * 0.2,
           position: 'relative', zIndex: 12,
         }}>
-          <HollyChar size={hollyW} hollyState="idle" flying={false} />
+          <HollyChar size={hollyW} hollyState="idle" flying={false} dialog="치킨 10개 먹고 마을을 구하자! 🍗" bubbleDir="right" />
         </div>
         <img
           src="/assets/boongchi_idle.png"

@@ -37,9 +37,12 @@ html, body {
   -webkit-user-select: none;
   touch-action: none;
 }
+/* 모바일 동적 viewport 높이 — 주소창 표시/숨김 대응 */
+html { height: 100dvh; }
 
 #root, .app-wrapper {
   width: 100%; height: 100%;
+  width: 100dvw; height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,6 +57,11 @@ html, body {
   overflow: hidden;
   border-radius: 12px;
   box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  /* 모바일 안전망: 화면 밖 넘침 방지 */
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  touch-action: none;
 }
 
 /* ════════════════════════════════════════
@@ -911,7 +919,7 @@ html, body {
   background:rgba(255,255,255,0.12);
   color:#fff; border:2px solid rgba(255,255,255,0.25); border-radius:10px;
   font-size:1.1rem; font-family:inherit;
-  min-width:52px; height:36px;
+  min-width:52px; height:44px;
   cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   transition:background 0.08s, transform 0.08s;
@@ -1141,6 +1149,73 @@ html, body {
   .hud-bar.bottom { height:32px; }
   .ctrl-bar       { height:38px; }
   .game-world     { inset:36px 0 70px 0; }
+}
+
+/* ════════════════════════════════════════
+   모바일 가로 UX — max-height 430px
+   (phone landscape: 360~430px 높이)
+   HUD 바 높이는 JS 상수(44/38/52)와 일치
+   시켜야 하므로 변경 금지 — 폰트/패딩만 축소
+   ════════════════════════════════════════ */
+@media (max-height: 430px) {
+
+  /* ── HUD 상단 ── */
+  .hud-bar { padding: 0 10px; gap: 2px; }
+  .hud-heart  { font-size: 0.82rem; }
+  .hud-score  { font-size: 0.78rem; min-width: 68px; margin-left: 6px; }
+  .hud-mission{ font-size: 0.70rem; padding: 1px 7px; }
+  .hud-timer  { font-size: 0.82rem; min-width: 52px; }
+  .pause-btn  { width: 26px; height: 24px; font-size: 0.78rem; margin-left: 5px; }
+
+  /* ── HUD 하단 게이지 ── */
+  .hud-gauge-row   { gap: 5px; }
+  .hud-gauge-label { font-size: 0.58rem; }
+  .hud-gauge-bar   { height: 9px; }
+  .hud-gauge-pct   { font-size: 0.56rem; min-width: 22px; }
+  .hud-fart-count  { font-size: 0.60rem; }
+
+  /* ── 컨트롤 버튼: 44px 터치 영역 유지 ── */
+  .ctrl-bar       { padding: 0 8px; }
+  .ctrl-dpad      { gap: 5px; }
+  .ctrl-btn       { min-width: 44px; height: 44px; font-size: 0.95rem; }
+  .ctrl-btn.large { min-width: 50px; }
+  .ctrl-btn.fart-btn { min-width: 72px; font-size: 0.72rem; padding: 0 10px; }
+
+  /* ── 홀리 말풍선 ── */
+  .holly-bubble   { padding: 5px 8px !important; max-width: 150px; }
+  .holly-bubble p { font-size: 0.78rem; }
+
+  /* ── 점수/콤보 팝업 ── */
+  .score-popup      { font-size: 1.05rem; }
+  .score-popup.big  { font-size: 1.4rem; }
+  .combo-popup      { font-size: 1.1rem; }
+  .combo-popup.fire { font-size: 1.4rem; }
+
+  /* ── 일시정지 메뉴 ── */
+  .pause-menu      { padding: 14px 24px 12px; gap: 8px; min-width: 180px; max-height: 95dvh; overflow-y: auto; }
+  .pause-title     { font-size: 1.15rem; }
+  .pause-stats     { font-size: 0.72rem; padding: 4px 10px; gap: 10px; }
+  .pause-buttons   { gap: 7px; }
+  .pause-btn-menu  { padding: 9px 0; font-size: 0.82rem; border-radius: 10px; }
+  .pause-hint      { font-size: 0.58rem; }
+
+  /* ── 결과 화면 ── */
+  .gameover-content { gap: 8px; padding: 10px 14px; }
+  .result-title     { gap: 7px; }
+  .result-title h1  { font-size: clamp(0.95rem, 3vw, 1.4rem); }
+  .result-icon      { font-size: clamp(0.95rem, 2.8vw, 1.3rem); }
+  .holly-comment    { padding: 6px 8px; gap: 8px; max-width: 100%; }
+  .speech-bubble-big p { font-size: 0.74rem; line-height: 1.35; }
+  .speech-speaker   { font-size: 0.62rem; }
+  .stats-card       { padding: 7px 10px; max-width: 100%; }
+  .stats-card h3    { font-size: 0.78rem; margin-bottom: 6px; }
+  .stats-grid       { gap: 5px; }
+  .stat-item        { padding: 4px 7px; gap: 4px; }
+  .stat-icon        { font-size: 0.85rem; }
+  .stat-label       { font-size: 0.60rem; }
+  .stat-value       { font-size: 0.78rem; }
+  .gameover-buttons { gap: 7px; margin-top: 2px; flex-wrap: nowrap; }
+  .btn-retry, .btn-menu { padding: 9px 18px; font-size: 0.82rem; min-height: 44px; }
 }
 
 /* ════════════════════════════════════════
