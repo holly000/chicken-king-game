@@ -26,8 +26,11 @@ const SFX_VOL = {
   gameOver:      0.60,
 }
 
+const MENU_BGM_SRC = '/sounds/bgm/opening-theme.mp3'
+const MENU_BGM_VOLUME = 0.35
 const POOL_SIZE = 3
 const pools = {}
+let menuBgm = null
 
 let enabled = true
 try {
@@ -40,6 +43,8 @@ export function getSfxEnabled() { return enabled }
 export function setSfxEnabled(val) {
   enabled = !!val
   try { localStorage.setItem('sfxEnabled', enabled ? 'true' : 'false') } catch {}
+  if (!enabled) stopMenuBgm()
+  try { window.dispatchEvent(new CustomEvent('sfxEnabledChange', { detail: enabled })) } catch {}
 }
 
 export function preloadSounds() {
@@ -78,5 +83,36 @@ export function playSound(key) {
     const audio = pool.find(a => a.paused || a.ended) ?? pool[0]
     audio.currentTime = 0
     audio.play().catch(() => {})
+  } catch {}
+}
+
+function getMenuBgm() {
+  if (!menuBgm) {
+    menuBgm = new Audio(MENU_BGM_SRC)
+    menuBgm.loop = true
+    menuBgm.volume = MENU_BGM_VOLUME
+    menuBgm.preload = 'auto'
+  }
+  return menuBgm
+}
+
+export function playMenuBgm() {
+  if (!enabled) return Promise.resolve(false)
+  try {
+    const audio = getMenuBgm()
+    audio.loop = true
+    audio.volume = MENU_BGM_VOLUME
+    if (!audio.paused && !audio.ended) return Promise.resolve(true)
+    return audio.play().then(() => true).catch(() => false)
+  } catch {
+    return Promise.resolve(false)
+  }
+}
+
+export function stopMenuBgm() {
+  if (!menuBgm) return
+  try {
+    menuBgm.pause()
+    menuBgm.currentTime = 0
   } catch {}
 }

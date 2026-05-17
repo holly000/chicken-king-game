@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import ParallaxBg from './ParallaxBg.jsx'
 import HollyChar from './HollyChar.jsx'
 import SfxToggle from './SfxToggle.jsx'
-import { playSound, preloadSounds, unlockAudio } from './utils/audio.js'
+import { getSfxEnabled, playMenuBgm, playSound, preloadSounds, stopMenuBgm, unlockAudio } from './utils/audio.js'
 import { loadBest } from './utils/highScore.js'
 import { loadProfiles, getActiveId } from './utils/profiles.js'
 import ProfileSelect from './ProfileSelect.jsx'
@@ -43,8 +43,39 @@ export default function StartScreen({ onStart, containerW, containerH, activePro
 
   useEffect(() => { preloadSounds() }, [])
   useEffect(() => { setBest(loadBest()) }, [])
+  useEffect(() => {
+    let waitingForGesture = false
 
-  const click = (fn) => () => { unlockAudio(); playSound('buttonClick'); fn() }
+    const tryPlayBgm = () => {
+      if (!getSfxEnabled()) return
+      playMenuBgm().then((played) => {
+        waitingForGesture = !played
+      })
+    }
+    const onGesture = () => {
+      if (waitingForGesture || getSfxEnabled()) tryPlayBgm()
+    }
+    const onSfxChange = (event) => {
+      if (event.detail) tryPlayBgm()
+      else stopMenuBgm()
+    }
+
+    tryPlayBgm()
+    window.addEventListener('pointerdown', onGesture)
+    window.addEventListener('touchstart', onGesture)
+    window.addEventListener('keydown', onGesture)
+    window.addEventListener('sfxEnabledChange', onSfxChange)
+
+    return () => {
+      window.removeEventListener('pointerdown', onGesture)
+      window.removeEventListener('touchstart', onGesture)
+      window.removeEventListener('keydown', onGesture)
+      window.removeEventListener('sfxEnabledChange', onSfxChange)
+      stopMenuBgm()
+    }
+  }, [])
+
+  const click = (fn) => () => { unlockAudio(); playMenuBgm(); playSound('buttonClick'); fn() }
 
   const closeStory = () => setShowStory(false)
 
