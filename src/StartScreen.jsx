@@ -44,38 +44,51 @@ export default function StartScreen({ onStart, containerW, containerH, activePro
   useEffect(() => { preloadSounds() }, [])
   useEffect(() => { setBest(loadBest()) }, [])
   useEffect(() => {
-    let waitingForGesture = false
+    let cleanedUp = false
+    let retryArmed = false
 
-    const tryPlayBgm = () => {
-      if (!getSfxEnabled()) return
-      playMenuBgm().then((played) => {
-        waitingForGesture = !played
-      })
+    const cleanupRetry = () => {
+      window.removeEventListener('pointerdown', retryOnce)
+      window.removeEventListener('keydown', retryOnce)
+      retryArmed = false
     }
-    const onGesture = () => {
-      if (waitingForGesture || getSfxEnabled()) tryPlayBgm()
+
+    const retryOnce = () => {
+      cleanupRetry()
+      if (cleanedUp || !getSfxEnabled()) return
+      playMenuBgm()
     }
+
+    const armRetryOnce = () => {
+      if (retryArmed) return
+      retryArmed = true
+      window.addEventListener('pointerdown', retryOnce, { once: true })
+      window.addEventListener('keydown', retryOnce, { once: true })
+    }
+
     const onSfxChange = (event) => {
-      if (event.detail) tryPlayBgm()
-      else stopMenuBgm()
+      if (!event.detail) {
+        cleanupRetry()
+        stopMenuBgm()
+        return
+      }
+      if (!cleanedUp) playMenuBgm()
     }
 
-    tryPlayBgm()
-    window.addEventListener('pointerdown', onGesture)
-    window.addEventListener('touchstart', onGesture)
-    window.addEventListener('keydown', onGesture)
+    playMenuBgm().then((played) => {
+      if (!cleanedUp && !played && getSfxEnabled()) armRetryOnce()
+    })
     window.addEventListener('sfxEnabledChange', onSfxChange)
 
     return () => {
-      window.removeEventListener('pointerdown', onGesture)
-      window.removeEventListener('touchstart', onGesture)
-      window.removeEventListener('keydown', onGesture)
+      cleanedUp = true
+      cleanupRetry()
       window.removeEventListener('sfxEnabledChange', onSfxChange)
       stopMenuBgm()
     }
   }, [])
 
-  const click = (fn) => () => { unlockAudio(); playMenuBgm(); playSound('buttonClick'); fn() }
+  const click = (fn) => () => { unlockAudio(); playSound('buttonClick'); fn() }
 
   const closeStory = () => setShowStory(false)
 

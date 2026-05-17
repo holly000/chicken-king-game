@@ -49,6 +49,7 @@ export function setSfxEnabled(val) {
 
 export function preloadSounds() {
   for (const [key, src] of Object.entries(SFX_MAP)) {
+    if (pools[key]?.length) continue
     try {
       pools[key] = Array.from({ length: POOL_SIZE }, () => {
         const a = new Audio(src)
